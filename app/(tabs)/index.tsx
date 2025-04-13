@@ -24,13 +24,21 @@ export default function HomeScreen() {
   
     const dates = Object.keys(weeklyData).slice(0, 10).reverse(); // latest 10 entries
     const closePrices = dates.map(date => parseFloat(weeklyData[date]['4. close']));
+    
+    // Store full date information for custom label rendering
+    const dateInfo = dates.map(d => {
+      const [year, month, day] = d.split('-');
+      return { day, month };
+    });
   
     return {
       year: dates[0].slice(0, 4), // Extract year from the earliest shown date
+      dateInfo: dateInfo, // Store the date information for custom rendering
       chart: {
         labels: dates.map(d => {
           const [year, month, day] = d.split('-');
-          return `${day}`; // newline between day and month
+          // Just use day in the chart labels - we'll render month separately
+          return `${day}`;
         }),
         
         datasets: [
@@ -46,7 +54,25 @@ export default function HomeScreen() {
   const chartResult = getChartData();
   const chartData = chartResult?.chart;
   const year = chartResult?.year;
+  const dateInfo = chartResult?.dateInfo;
   const screenWidth = Dimensions.get('window').width;
+
+  // Render custom x-axis labels with months below days
+  const renderCustomLabels = () => {
+    if (!dateInfo) return null;
+    
+    const labelWidth = (screenWidth - 40) / dateInfo.length;
+    
+    return (
+      <View style={{ flexDirection: 'row', marginLeft: 48, marginTop: -10 }}>
+        {dateInfo.map((date, index) => (
+          <View key={index} style={{ width: labelWidth, alignItems: 'center' }}>
+            <Text style={{ fontSize: 10, color: '#666' }}>{date.month}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#fff', marginTop: 50, paddingHorizontal: 10 }}>
@@ -72,32 +98,35 @@ export default function HomeScreen() {
           <Text style={{ fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
             {stockData['Meta Data']['2. Symbol']} Weekly Closing Prices
           </Text>
-          <LineChart
-            data={chartData}
-            width={screenWidth - 20}
-            height={220}
-            chartConfig={{
-              backgroundColor: '#ffffff',
-              backgroundGradientFrom: '#ffffff',
-              backgroundGradientTo: '#ffffff',
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              style: {
+          <View>
+            <LineChart
+              data={chartData}
+              width={screenWidth - 20}
+              height={220}
+              chartConfig={{
+                backgroundColor: '#ffffff',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                decimalPlaces: 2,
+                color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: '4',
+                  strokeWidth: '2',
+                  stroke: '#007AFF',
+                },
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
                 borderRadius: 16,
-              },
-              propsForDots: {
-                r: '4',
-                strokeWidth: '2',
-                stroke: '#007AFF',
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
+              }}
+            />
+            {renderCustomLabels()}
+          </View>
         </>
       )}
 

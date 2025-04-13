@@ -37,7 +37,6 @@ export default function HomeScreen() {
       chart: {
         labels: dates.map(d => {
           const [year, month, day] = d.split('-');
-          // Just use day in the chart labels - we'll render month separately
           return `${day}`;
         }),
         
